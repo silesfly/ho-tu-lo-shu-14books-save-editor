@@ -1,0 +1,16 @@
+HANDOFF*.md
+__pycache__/
+*.py[cod]
+node_modules/
+.ssts_store.lock
+*.bak
+*.pending*
+*.tmp
+*.save
+dist/*.exe
+dist/*.dll
+dist/*.zip
+dist/*.txt
+dist/*.json
+receipt.json
+.playwright-mcp/

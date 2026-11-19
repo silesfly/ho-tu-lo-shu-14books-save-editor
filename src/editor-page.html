@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="light dark">
+  <title>하락군협전 십사천서 세이브 에디터 v1.0</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-raised: #fbfcfd;
+      --surface-soft: #eef2f5;
+      --text: #202a33;
+      --muted: #65727d;
+      --line: #d9e0e6;
+      --line-strong: #c5cfd7;
+      --accent: #356b8c;
+      --accent-hover: #285873;
+      --accent-soft: #e6f0f5;
+      --good: #287354;
+      --good-soft: #e7f3ec;
+      --warn: #88631c;
+      --warn-soft: #f8f0dc;
+      --danger: #a13e3e;
+      --shadow: 0 3px 12px rgb(29 48 62 / 7%);
+      --radius: 10px;
+      --radius-small: 7px;
+      --focus: 0 0 0 3px rgb(53 107 140 / 26%);
+    }
+
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #151a1f;
+      --surface: #1d242a;
+      --surface-raised: #222b32;
+      --surface-soft: #29333a;
+      --text: #e5eaee;
+      --muted: #a2adb6;
+      --line: #35414a;
+      --line-strong: #485660;
+      --accent: #82b7d2;
+      --accent-hover: #a3cde0;
+      --accent-soft: #263c48;
+      --good: #83c6a3;
+      --good-soft: #253d32;
+      --warn: #d5b66d;
+      --warn-soft: #403821;
+      --danger: #e49a9a;
+      --shadow: 0 3px 14px rgb(0 0 0 / 18%);
+      --focus: 0 0 0 3px rgb(130 183 210 / 26%);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #151a1f;
+        --surface: #1d242a;
+        --surface-raised: #222b32;
+        --surface-soft: #29333a;
+        --text: #e5eaee;
+        --muted: #a2adb6;
+        --line: #35414a;
+        --line-strong: #485660;
+        --accent: #82b7d2;
+        --accent-hover: #a3cde0;
+        --accent-soft: #263c48;
+        --good: #83c6a3;
+        --good-soft: #253d32;
+        --warn: #d5b66d;
+        --warn-soft: #403821;
+        --danger: #e49a9a;
+        --shadow: 0 3px 14px rgb(0 0 0 / 18%);
+        --focus: 0 0 0 3px rgb(130 183 210 / 26%);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    button, input, select, textarea { font: inherit; color: var(--text); }
+    button {
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-small);
+      background: var(--surface);
+      padding: 7px 11px;
+      cursor: pointer;
+      transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    }
+    button:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+    button.primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      color: #fff;
+    }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    :focus-visible { outline: none; box-shadow: var(--focus); }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-small);
+      background: var(--surface);
+      padding: 8px 10px;
+    }
+    input[type="checkbox"], input[type="radio"] { width: auto; accent-color: var(--accent); }
+    textarea { min-height: 110px; resize: vertical; }
+    a { color: var(--accent); }
+
+    .skip-link {
+      position: fixed;
+      z-index: 20;
+      top: 8px;
+      left: 8px;
+      transform: translateY(-160%);
+      border-radius: var(--radius-small);
+      background: var(--surface);
+      padding: 8px 12px;
+      color: var(--text);
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    .topbar {
+      position: sticky;
+      z-index: 10;
+      top: 0;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .topbar-main, .topbar-tools, .topbar-status {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      max-width: 1440px;
+      margin-inline: auto;
+      padding: 9px 18px;
+    }
+    .topbar-main { min-height: 58px; flex-wrap: wrap; }
+    .brand { min-width: 220px; margin-right: auto; }
+    .brand-title { margin: 0; font-size: 16px; font-weight: 750; letter-spacing: -.02em; }
+    .brand-subtitle { color: var(--muted); font-size: 11px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      max-width: min(260px, 35vw);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-soft);
+      padding: 4px 9px;
+      color: var(--muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+    #dirty-badge[data-dirty="true"] {
+      border-color: var(--warn);
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+    .topbar-tools { flex-wrap: wrap; border-top: 1px solid var(--line); padding-block: 7px; }
+    .toolbar-group { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+    .toolbar-group[hidden] { display: none; }
+    .toolbar-label { color: var(--muted); font-size: 12px; font-weight: 650; }
+    .toolbar-select { width: auto; min-width: 180px; }
+    .topbar-status {
+      min-height: 34px;
+      border-top: 1px solid var(--line);
+      padding-block: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    #status-msg.error, #status-msg[data-kind="error"] { color: var(--danger); }
+    #status-msg.ok, #status-msg[data-kind="success"] { color: var(--good); }
+
+    main { width: min(1440px, 100%); margin: 0 auto; padding: 20px 18px 48px; }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--line-strong);
+      margin-bottom: 18px;
+      scrollbar-width: thin;
+    }
+    .tab-btn {
+      flex: 0 0 auto;
+      border: 0;
+      border-radius: var(--radius-small) var(--radius-small) 0 0;
+      background: transparent;
+      padding: 10px 14px;
+      color: var(--muted);
+      font-weight: 650;
+    }
+    .tab-btn[aria-selected="true"] {
+      border-bottom: 3px solid var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    [role="tabpanel"][hidden] { display: none; }
+
+    .panel-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 14px;
+    }
+    .panel-heading h2 { margin: 0; font-size: 21px; letter-spacing: -.02em; }
+    .panel-heading p { margin: 0; color: var(--muted); font-size: 12px; }
+    .section-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .card {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 15px;
+      box-shadow: var(--shadow);
+    }
+    .card h3 { margin: 0 0 12px; font-size: 15px; }
+    .card p { margin: 5px 0; }
+    .span-12 { grid-column: span 12; }
+    .span-8 { grid-column: span 8; }
+    .span-6 { grid-column: span 6; }
+    .span-4 { grid-column: span 4; }
+    .empty, .empty-state {
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius-small);
+      padding: 18px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+    .field { display: grid; gap: 5px; min-width: 0; }
+    .field label, .field-label { color: var(--muted); font-size: 12px; font-weight: 650; }
+    .summary-grid, .preset-grid, .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+    }
+    .summary-card, .preset-card, .stat-card, .stat-item {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-small);
+      background: var(--surface-raised);
+      padding: 10px 12px;
+    }
+    .stat-item { display: grid; gap: 5px; }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 650; }
+    .card-key, .summary-card .label { display: block; color: var(--muted); font-size: 12px; }
+    .card-value, .summary-card .value {
+      display: block;
+      margin-top: 4px;
+      font-size: 17px;
+      font-weight: 720;
+      overflow-wrap: anywhere;
+    }
+    .preset-card { display: grid; gap: 6px; }
+    .preset-card p { color: var(--muted); font-size: 12px; margin: 0; }
+    .stat-group-bar, .inventory-toolbar, .filter-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-bottom: 12px;
+    }
+    .stat-group-bar button[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .filter-row > * { flex: 1 1 180px; }
+    .equip-row, .skill-row, .party-row, .check-row, .talent-item, .tujian-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+      padding: 8px 2px;
+    }
+    .equip-row:last-child, .skill-row:last-child, .party-row:last-child,
+    .check-row:last-child, .talent-item:last-child, .tujian-row:last-child { border-bottom: 0; }
+    .equip-row > *, .skill-row > *, .party-row > *, .tujian-row > * { min-width: 0; }
+    .row-title { flex: 1 1 180px; font-weight: 650; }
+    .row-meta { color: var(--muted); font-size: 12px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-soft);
+      padding: 2px 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .log-textarea {
+      min-height: 150px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .table-wrap {
+      width: 100%;
+      max-height: 480px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-small);
+      background: var(--surface);
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; vertical-align: middle; }
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: 0; }
+    .muted { color: var(--muted); font-size: 12px; }
+    .ok { color: var(--good); }
+    .bad { color: var(--danger); }
+    .scroll-box { max-height: 380px; overflow: auto; }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+    dialog {
+      width: min(680px, calc(100vw - 28px));
+      max-height: min(82vh, 760px);
+      border: 1px solid var(--line-strong);
+      border-radius: 14px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 0;
+      box-shadow: 0 18px 60px rgb(0 0 0 / 24%);
+    }
+    dialog::backdrop { background: rgb(10 18 24 / 55%); }
+    .dialog-header, .dialog-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+      padding: 14px 16px;
+    }
+    .dialog-header h2 { margin: 0; font-size: 17px; }
+    .dialog-body { display: grid; gap: 12px; padding: 16px; }
+    .dialog-footer { justify-content: flex-end; border-top: 1px solid var(--line); border-bottom: 0; }
+    #picker-list { display: grid; gap: 6px; max-height: 48vh; overflow: auto; }
+    .picker-item { text-align: left; }
+
+    @media (max-width: 760px) {
+      .topbar-main, .topbar-tools, .topbar-status { padding-inline: 12px; }
+      .brand { min-width: 160px; }
+      .brand-subtitle { display: none; }
+      main { padding: 14px 12px 36px; }
+      .span-8, .span-6, .span-4 { grid-column: span 12; }
+      .panel-heading { align-items: flex-start; flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+
+  <header class="topbar">
+    <div class="topbar-main">
+      <div class="brand">
+        <h1 class="brand-title">하락군협전 십사천서 세이브 에디터</h1>
+        <div class="brand-subtitle">오프라인 세이브 편집 도구 · v1.0</div>
+      </div>
+      <span id="file-badge" class="badge" aria-live="polite">파일 없음</span>
+      <span id="dirty-badge" class="badge" data-dirty="false" hidden aria-live="polite">변경 없음</span>
+      <button id="btn-theme" type="button" aria-label="테마 전환" title="테마 전환">테마</button>
+    </div>
+
+    <div class="topbar-tools">
+      <div id="native-bar" class="toolbar-group" hidden>
+        <button id="btn-native-open" type="button">열기 (.save)</button>
+        <button id="btn-native-save" type="button">저장 (백업 생성)</button>
+        <button id="btn-native-save-copy" type="button">다른 이름으로 저장</button>
+      </div>
+      <div id="server-bar" class="toolbar-group" hidden>
+        <label class="toolbar-label" for="server-save-select">서버 저장 파일</label>
+        <select id="server-save-select" class="toolbar-select">
+          <option value="">파일 선택</option>
+        </select>
+        <button id="btn-server-load" type="button">불러오기</button>
+        <button id="btn-server-save" type="button">서버 저장</button>
+      </div>
+      <div id="browser-bar" class="toolbar-group">
+        <input id="file-input" class="visually-hidden" type="file" accept=".save,.sav,application/octet-stream">
+        <button id="btn-file-open" type="button">세이브 열기 (.save)</button>
+        <button id="btn-download-save" type="button" disabled>세이브 다운로드 (.save)</button>
+        <button id="btn-load-demo" type="button">데모 세이브 체험</button>
+      </div>
+    </div>
+
+    <div class="topbar-status">
+      <span id="status-msg" role="status" aria-live="polite">세이브 파일을 열어 주세요.</span>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <nav class="tabs" role="tablist" aria-label="에디터 섹션">
+      <button id="tab-btn-summary" class="tab-btn" type="button" role="tab" aria-controls="panel-summary" aria-selected="true" tabindex="0">요약 · 프리셋 · 세계</button>
+      <button id="tab-btn-chara" class="tab-btn" type="button" role="tab" aria-controls="panel-chara" aria-selected="false" tabindex="-1">인물 · 능력치</button>
+      <button id="tab-btn-skills" class="tab-btn" type="button" role="tab" aria-controls="panel-skills" aria-selected="false" tabindex="-1">무공 · 감오</button>
+      <button id="tab-btn-inventory" class="tab-btn" type="button" role="tab" aria-controls="panel-inventory" aria-selected="false" tabindex="-1">장비 · 소지품</button>
+      <button id="tab-btn-party" class="tab-btn" type="button" role="tab" aria-controls="panel-party" aria-selected="false" tabindex="-1">동료 · 거점 · 도감</button>
+      <button id="tab-btn-atlas" class="tab-btn" type="button" role="tab" aria-controls="panel-atlas" aria-selected="false" tabindex="-1">코드 도감 · 검증 · 변경내역</button>
+    </nav>
+
+    <section id="panel-summary" role="tabpanel" aria-labelledby="tab-btn-summary">
+      <div class="panel-heading">
+        <h2>요약 · 프리셋 · 세계</h2>
+        <p>세이브의 주요 상태를 확인하고 편집합니다.</p>
+      </div>
+      <div class="section-grid">
+        <section class="card span-12" aria-labelledby="summary-title">
+          <h3 id="summary-title">세이브 요약</h3>
+          <div id="summary-cards" class="summary-grid">
+            <div class="empty-state">세이브를 열면 요약 정보가 표시됩니다.</div>
+          </div>
+        </section>
+        <section class="card span-12" aria-labelledby="preset-title">
+          <h3 id="preset-title">빠른 프리셋</h3>
+          <div id="preset-grid" class="preset-grid">
+            <div class="empty-state">사용할 수 있는 프리셋이 여기에 표시됩니다.</div>
+          </div>
+        </section>
+        <section class="card span-6" aria-labelledby="world-title">
+          <h3 id="world-title">세계 설정</h3>
+          <div id="world-form" class="field-row">
+            <div class="empty-state">세이브를 열면 세계 상태를 편집할 수 있습니다.</div>
+          </div>
+        </section>
+        <section class="card span-6" aria-labelledby="wulin-log-title">
+          <h3 id="wulin-log-title">무림일지 (전용 로그)</h3>
+          <div id="wulin-log-box">
+            <div class="empty-state">세이브를 열면 무림일지가 표시됩니다.</div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="panel-chara" role="tabpanel" aria-labelledby="tab-btn-chara" hidden>
+      <div class="panel-heading">
+        <h2>인물 · 능력치</h2>
+        <p>인물을 선택하고 기본 정보와 48종 능력치를 편집합니다.</p>
+      </div>
+      <div class="section-grid">
+        <section class="card span-12" aria-label="인물 선택">
+          <div class="filter-row">
+            <input id="chara-filter" type="search" aria-label="인물 검색" placeholder="인물 이름이나 코드를 검색">
+            <select id="chara-select" aria-label="인물 선택">
+              <option value="">인물 선택</option>
+            </select>
+          </div>
+        </section>
+        <section class="card span-12" aria-labelledby="chara-basic-title">
+          <h3 id="chara-basic-title">기본 정보</h3>
+          <div id="chara-basic-box">
+            <div class="empty-state">인물을 선택하면 기본 정보가 표시됩니다.</div>
+          </div>
+        </section>
+        <section class="card span-12" aria-labelledby="stats-title">
+          <h3 id="stats-title">능력치</h3>
+          <div id="stat-group-bar" class="stat-group-bar" role="group" aria-label="능력치 분류"></div>
+          <div id="stats-grid" class="stats-grid">
+            <div class="empty-state">인물을 선택하면 능력치가 표시됩니다.</div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="panel-skills" role="tabpanel" aria-labelledby="tab-btn-skills" hidden>
+      <div class="panel-heading">
+        <h2>무공 · 감오</h2>
+        <p>무공 숙련도와 6대 감오 노드를 편집합니다.</p>
+      </div>
+      <div class="section-grid">
+        <section class="card span-6" aria-labelledby="skills-title">
+          <h3 id="skills-title">보유 무공</h3>
+          <div id="skills-box">
+            <div class="empty-state">인물을 선택하면 무공 목록이 표시됩니다.</div>
+          </div>
+        </section>
+        <section class="card span-6" aria-labelledby="talents-title">
+          <h3 id="talents-title">감오 노드</h3>
+          <div id="talents-box">
+            <div class="empty-state">인물을 선택하면 감오 정보가 표시됩니다.</div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="panel-inventory" role="tabpanel" aria-labelledby="tab-btn-inventory" hidden>
+      <div class="panel-heading">
+        <h2>장비 · 소지품</h2>
+        <p>9종 장비 슬롯과 소지품 목록을 관리합니다.</p>
+      </div>
+      <div class="section-grid">
+        <section class="card span-12" aria-labelledby="equip-title">
+          <h3 id="equip-title">장비 (9슬롯)</h3>
+          <div id="equip-box">
+            <div class="empty-state">세이브를 열면 장비 목록이 표시됩니다.</div>
+          </div>
+        </section>
+        <section class="card span-12" aria-labelledby="inventory-title">
+          <h3 id="inventory-title">소지품</h3>
+          <div id="inventory-toolbar" class="inventory-toolbar"></div>
+          <div class="filter-row" style="margin-bottom:10px">
+            <input id="inv-filter" type="search" aria-label="소지품 검색" placeholder="이름이나 코드를 검색">
+            <select id="inv-category" aria-label="분류 선택">
+              <option value="">모든 분류</option>
+            </select>
+          </div>
+          <div id="inventory-table-wrap" class="table-wrap" tabindex="0" aria-label="소지품 목록">
+            <div class="empty-state">세이브를 열면 소지품 목록이 표시됩니다.</div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="panel-party" role="tabpanel" aria-labelledby="tab-btn-party" hidden>
+      <div class="panel-heading">
+        <h2>동료 · 거점 · 도감</h2>
+        <p>동료 편성, 무림도감, 전송 거점, 칭호를 관리합니다.</p>
+      </div>
+      <div class="section-grid">
+        <section class="card span-6" aria-labelledby="party-title">
+          <h3 id="party-title">동료 편성</h3>
+          <div id="party-box" class="scroll-box">
+            <div class="empty-state">세이브를 열면 동료 정보가 표시됩니다.</div>
+          </div>
+        </section>
+        <section class="card span-6" aria-labelledby="tujian-title">
+          <h3 id="tujian-title">무림도감 (조우 · 보너스)</h3>
+          <div id="tujian-box" class="scroll-box">
+            <div class="empty-state">세이브를 열면 무림도감 정보가 표시됩니다.</div>
+          </div>
+        </section>
+        <section class="card span-6" aria-labelledby="teleporters-title">
+          <h3 id="teleporters-title">전송 거점</h3>
+          <div id="teleporters-box" class="scroll-box">
+            <div class="empty-state">세이브를 열면 전송 거점이 표시됩니다.</div>
+          </div>
+        </section>
+        <section class="card span-6" aria-labelledby="nicknames-title">
+          <h3 id="nicknames-title">칭호</h3>
+          <div id="nicknames-box" class="scroll-box">
+            <div class="empty-state">세이브를 열면 칭호 정보가 표시됩니다.</div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="panel-atlas" role="tabpanel" aria-labelledby="tab-btn-atlas" hidden>
+      <div class="panel-heading">
+        <h2>코드 도감 · 검증 · 변경내역</h2>
+        <p>저장 무결성 검증 결과와 변경 내역, 강자의 길 도감을 확인합니다.</p>
+      </div>
+      <div class="section-grid">
+        <section class="card span-6" aria-labelledby="validation-title">
+          <h3 id="validation-title">무결성 검증</h3>
+          <div id="validation-box">
+            <div class="empty-state">세이브를 열면 검증 결과가 표시됩니다.</div>
+          </div>
+        </section>
+        <section class="card span-6" aria-labelledby="diff-title">
+          <h3 id="diff-title">변경 내역</h3>
+          <div id="diff-box" class="scroll-box">
+            <div class="empty-state">변경 사항이 여기에 표시됩니다.</div>
+          </div>
+        </section>
+        <section class="card span-12" aria-labelledby="atlas-title">
+          <h3 id="atlas-title">코드 도감 · 강자의 길</h3>
+          <div id="atlas-box" class="scroll-box">
+            <div class="empty-state">코드 자료가 여기에 표시됩니다.</div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="picker-dialog" aria-labelledby="picker-title">
+    <div class="dialog-header">
+      <h2 id="picker-title">항목 선택</h2>
+      <button id="picker-close" type="button" aria-label="선택 창 닫기">닫기</button>
+    </div>
+    <div class="dialog-body">
+      <label class="visually-hidden" for="picker-search">항목 검색</label>
+      <input id="picker-search" type="search" placeholder="이름이나 코드를 검색">
+      <div id="picker-list" role="listbox" aria-label="선택 가능한 항목"></div>
+    </div>
+    <div class="dialog-footer">
+      <button type="button" id="picker-cancel">취소</button>
+    </div>
+  </dialog>
+
+  <script src="ssts-lz4-msgpack.js"></script>
+  <script src="catalog-data.js"></script>
+  <script src="editor-core.js"></script>
+  <script src="editor-ui.js"></script>
+</body>
+</html>
